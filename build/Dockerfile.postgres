@@ -1,0 +1,7 @@
+FROM postgres:13.3
+
+RUN rm -rf /var/lib/postgresql/data/*
+COPY ./build/URLDB.sql /docker-entrypoint-initdb.d/URLDB.sql
+
+VOLUME /var/lib/postgresql/data
+

@@ -1,0 +1,54 @@
+version: "3"
+
+services:
+  postgres:
+    hostname: Url.postgres
+    build: 
+      context: ./
+      dockerfile: build/Dockerfile.postgres
+    volumes:
+      - ./build/data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d ${DB_NAME} -U ${DB_USER}"]
+      interval: 10s
+      timeout: 10s
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 2s
+        max_attempts: 3
+        window: 10m
+
+  api:
+    hostname: api.Url
+    build:
+      context: ./
+      dockerfile: build/Dockerfile.api
+    stdin_open: true
+    tty: true
+    ports:
+     - "8000:8000"
+     - "9000:9000"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+
+  redis:
+    image: redis:latest
+    hostname: my-redis
+    ports:
+      - "6379:6379"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 2s
+        max_attempts: 3
+        window: 10m
